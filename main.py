@@ -7,14 +7,15 @@ from time import sleep
 from gpiostepper import Stepper
 from service import cup_image
 
-motor_pins = (18, 23, 24, 25)   # підключення пінів до мотора
+motor_pins = (23, 24, 25)   # підключення пінів до мотора
 step_motor = Stepper(motor_pins)
 step_motor.set_speed(600)
 
 led_green = LED(17)     # Підключення зеленого світлодіода
 led_red = LED(27)       # Підключення червоного світлодіода
 
-button = Button(22)
+button1 = Button(22)    # кнопка для запису обличчя
+button2 = Button(26)    # копка для порівння облич
 
 
 def save_face(frame, x, y, w, h):
@@ -96,9 +97,9 @@ def face_check():
 def button_face_processed():
     face_check()
 
-# def button_face_save():
-#     cup_image('faces')
+def button_face_save():
+    cup_image('faces')
 
 if __name__ == '__main__':
-    button.when_pressed = button_face_processed
-    # button.when_pressed = button_face_save
+    button1.when_pressed = button_face_processed
+    button2.when_pressed = button_face_save
