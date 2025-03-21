@@ -18,6 +18,7 @@ def cup_image(cropped_photo_path):
 
         while True:
             ret, frame = cap.read()
+            print(ret)
             if not ret:
                 print("Не вдалося отримати кадр з камери.")
                 break
@@ -50,4 +51,4 @@ def cup_image(cropped_photo_path):
         return str(e)
 
 if __name__ == '__main__':
-    cup_image('faces/cropped_face.jpg')
+    cup_image('faces/cropped_face1.jpg')

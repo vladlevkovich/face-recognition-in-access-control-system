@@ -35,12 +35,10 @@ def compare_faces(face1_path: str, face2_path: str):
 def load_stored_faces():
     stored_faces = []
     faces_dir = 'faces'
-    for person_dir in os.listdir(faces_dir):
-        person_path = os.path.join(faces_dir, person_dir)
-        if os.path.isdir(person_path):
-            for face_file in os.listdir(person_path):
-                if face_file.startswith('cropped') and face_file.endswith('.jpg'):
-                    stored_faces.append(os.path.join(person_path, face_file))
+    for face_file in os.listdir(faces_dir):
+        face_path = os.path.join(faces_dir, face_file)
+        if face_file.startswith('cropped') and face_file.endswith('.jpg') and os.path.isfile(face_path):
+            stored_faces.append(face_path)
     return stored_faces
 
 
@@ -49,7 +47,7 @@ def verify_face(detected_face_path, stored_faces):
         result = compare_faces(detected_face_path, stored_face)
         if result is True:
             led_green.on()
-            step_motor.step(32 * 64)
+            # step_motor.step(32 * 64)
             sleep(1)
             led_green.off()
             return True
@@ -68,34 +66,42 @@ def face_check():
     capture_interval = 5   # інтервал збереження
     stored_faces = load_stored_faces()
 
-    while True:
-        # зчитуємо дані з камери
-        _, frame = camera.read()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    try:
+        while True:
+            # зчитуємо дані з камери
+            _, frame = camera.read()
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # знаходимло обличчя
-        faces = clf.detectMultiScale(
-            gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30), flags=cv2.CASCADE_SCALE_IMAGE
-        )
-        current_time = time.time()
-        if current_time - last_capture_time >= capture_interval:
-            for x, y, w, h in faces:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 0), 2)
-                face_path = save_face(frame=frame, x=x, y=y, w=w, h=h)
-                if verify_face(face_path, stored_faces):
-                    print('Доступ надано')
-                    break
-                else:
-                    print('У доступі відмовлено')
-            last_capture_time = current_time
-        cv2.imshow('Faces', frame)
-        if cv2.waitKey(1) == 'q':
-            break
-    camera.release()
-    cv2.destroyAllWindows()
+            # знаходимло обличчя
+            faces = clf.detectMultiScale(
+                gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30), flags=cv2.CASCADE_SCALE_IMAGE
+            )
+            current_time = time.time()
+            if current_time - last_capture_time >= capture_interval:
+                for x, y, w, h in faces:
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 0), 2)
+                    face_path = save_face(frame=frame, x=x, y=y, w=w, h=h)
+                    if verify_face(face_path, stored_faces):
+                        print('Доступ надано')
+                        os.remove(face_path)
+                        return 'Доступ надано'
+                    else:
+                        print('У доступі відмовлено')
+                        return 'Доступ надано'
+                last_capture_time = current_time
+            cv2.imshow('Faces', frame)
+            if cv2.waitKey(1) == 'q':
+                break
+    except Exception as e:
+        print(str(e))
+        return str(e)
+    finally:
+        camera.release()
+        cv2.destroyAllWindows()
 
 def button_face_processed():
-    face_check()
+    led_green.on()
+    # face_check()
 
 def button_face_save():
     cup_image('faces')
